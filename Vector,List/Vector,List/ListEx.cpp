@@ -21,7 +21,7 @@ public:
 		header->next = trailer;
 		trailer->prev = header;
 		header->prev = trailer->next = NULL; // header와 trailer가 서로를 가리키는 형태
-		n = 0; 
+		n = 0;
 	};
 
 	// list가 비었는지 판단하는 함수
@@ -76,7 +76,7 @@ public:
 	}
 
 	void eraseBack() {
-		erase(end() -> prev);
+		erase(end()->prev);
 	}
 };
 
