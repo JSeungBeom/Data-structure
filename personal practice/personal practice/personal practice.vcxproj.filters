@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="W7_P4.cpp">
+    <ClCompile Include="file2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
