@@ -19,7 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BinarySearchTree_prob4.cpp" />
+    <ClCompile Include="..\..\Hashing\Hashing\StringKey_prob4.cpp" />
+    <ClCompile Include="TwoKeys_prob4.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
