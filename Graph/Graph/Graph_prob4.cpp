@@ -1,28 +1,26 @@
 #include <iostream>
-#include <vector>	
+#include <vector>
 
 using namespace std;
 
 struct vertex {
-	int vertexId; // 정점의 고유 번호
-	int matrixId; // edge matrix에서 정점의 인덱스
-
-	vertex* prev;
+	int vertexId;
+	int matrixId;
 	vertex* next;
+	vertex* prev;
 
 	vertex() {
 		vertexId = matrixId = -1;
-		prev = next = NULL;
+		next = prev = NULL;
 	}
 
 	vertex(int vertexId) {
 		this->vertexId = vertexId;
 		matrixId = -1;
-		prev = next = NULL;
+		next = prev = NULL;
 	}
 };
 
-// vertex object 시퀀스를 이중 연결 리스트로 구현
 class vertexList {
 private:
 	vertex* header;
@@ -37,34 +35,29 @@ public:
 		trailer->prev = header;
 	}
 
-	// Vertex object 삽입, 맨 뒤에 삽입
 	void insertVertex(vertex* newVertex) {
-		newVertex->prev = trailer->prev;
 		newVertex->next = trailer;
-		// 행렬의 맨 뒤에 추가하므로, 이전 셀보다 1 증가한 matrixId 
+		newVertex->prev = trailer->prev;
 		newVertex->matrixId = trailer->prev->matrixId + 1;
 		trailer->prev->next = newVertex;
 		trailer->prev = newVertex;
 	}
 
-	// Vertex object 삭제
 	void eraseVertex(vertex* delVertex) {
-		// 삭제할 정점 뒤에 있던 행렬의 matrix id를 감소
 		for (vertex* cur = delVertex; cur != trailer; cur = cur->next) {
 			cur->matrixId--;
 		}
 
 		delVertex->prev->next = delVertex->next;
 		delVertex->next->prev = delVertex->prev;
+
 		delete delVertex;
 	}
 
-	// Vertex object의 주소를 고유 값으로 찾기
 	vertex* findVertex(int vertexId) {
 		for (vertex* cur = header->next; cur != trailer; cur = cur->next) {
-			if (cur->vertexId == vertexId) {
+			if (cur->vertexId == vertexId)
 				return cur;
-			}
 		}
 
 		return NULL;
@@ -72,23 +65,24 @@ public:
 };
 
 struct edge {
-	edge* next; // edge list에서 서로의 위치 저장
-	edge* prev;
-
-	vertex* src; // 양 끝 정점의 위치 저장
+	vertex* src;
 	vertex* dst;
-	int status;
+	int weight;
+
+	edge* next;
+	edge* prev;
 
 	edge() {
 		src = dst = NULL;
-		prev = next = NULL;
+		next = prev = NULL;
+		weight = -1;
 	}
 
-	edge(vertex* src, vertex* dst, int status) {
+	edge(vertex* src, vertex* dst, int weight) {
 		this->src = src;
 		this->dst = dst;
-		status = -1;
-		prev = next = NULL;
+		this->weight = weight;
+		next = prev = NULL;
 	}
 };
 
@@ -105,96 +99,82 @@ public:
 		trailer->prev = header;
 	}
 
-	// edge object를 시퀀스에 삽입
 	void insertEdge(edge* newEdge) {
-		newEdge->prev = trailer->prev;
 		newEdge->next = trailer;
+		newEdge->prev = trailer->prev;
 		trailer->prev->next = newEdge;
 		trailer->prev = newEdge;
 	}
 
 	void eraseEdge(edge* delEdge) {
-		delEdge->prev->next = delEdge->next;
 		delEdge->next->prev = delEdge->prev;
+		delEdge->prev->next = delEdge->next;
 		delete delEdge;
 	}
 };
 
 class graph {
 private:
-	vector<vector<edge*>> edgeMatrix; // 이중 행렬, edge가 어떤 정점을 연결하는지 정보 저장
 	vertexList vList;
 	edgeList eList;
+	vector<vector<edge*>> edgeMatrix;
 
 public:
 	void insertVertex(int vertexId) {
-		// 삽입하고자 하는 vertex가 이미 존재하는 경우
-		if (vList.findVertex(vertexId) != NULL) {
+		if (vList.findVertex(vertexId) != NULL)
 			return;
-		}
 
-		vertex* newVertex = new vertex(vertexId); // 새 vertex 할당
+		vertex* newVertex = new vertex(vertexId);
 
-		// 새로운 vertex를 위한 열을 추가
 		for (int i = 0; i < edgeMatrix.size(); i++) {
 			edgeMatrix[i].push_back(NULL);
 		}
 
-		// 새로운 vertex를 위한 행을 추가
 		edgeMatrix.push_back(vector<edge*>(edgeMatrix.size() + 1, NULL));
 
-		// vertexList에 새 vertex 추가
 		vList.insertVertex(newVertex);
 	}
 
-	// vertex 삭제
 	void eraseVertex(int vertexId) {
 		vertex* delVertex = vList.findVertex(vertexId);
-
-		if (delVertex == NULL) { // 삭제하려는 vertex 존재 X
+		if (delVertex == NULL)
 			return;
-		}
 
 		int matrixId = delVertex->matrixId;
 
 		for (int i = 0; i < edgeMatrix.size(); i++) {
-			if (i != matrixId) { // self-loop가 아닐 때
-				if (edgeMatrix[i][matrixId] != NULL) { // i행 matrixId열이 주소값을 가졌다면
-					eList.eraseEdge(edgeMatrix[i][matrixId]); // 해당 edge 삭제
+			if (i != matrixId) {
+				if (edgeMatrix[i][matrixId] != NULL) {
+					eList.eraseEdge(edgeMatrix[i][matrixId]);
 				}
-				edgeMatrix[i].erase(edgeMatrix[i].begin() + matrixId); // 행렬의 해당 열 삭제
+				edgeMatrix[i].erase(edgeMatrix[i].begin() + matrixId);
 			}
 		}
 
-		edgeMatrix.erase(edgeMatrix.begin() + matrixId); // 행렬의 해당 행 삭제
-		vList.eraseVertex(delVertex); // vertex 삭제
+		edgeMatrix.erase(edgeMatrix.begin() + matrixId);
+		vList.eraseVertex(delVertex);
 	}
 
-	void insertEdge(int srcVertexId, int dstVertexId, int status) {
+	void insertEdge(int srcVertexId, int dstVertexId, int weight) {
 		vertex* src = vList.findVertex(srcVertexId);
 		vertex* dst = vList.findVertex(dstVertexId);
-
-		if (src == NULL || dst == NULL) // 정점이 없다면
+		if (src == NULL || dst == NULL)
 			return;
 
-		int srcMatrixId = src->matrixId; // 시작 정점의 matrixId
-		int dstMatrixId = dst->matrixId; // 도착 정점의 matrixId
+		int srcMatrixId = src->matrixId;
+		int dstMatrixId = dst->matrixId;
 
-		// 이미 edge가 존재한다면
-		if (edgeMatrix[srcMatrixId][dstMatrixId] != NULL ||
-			edgeMatrix[dstMatrixId][srcMatrixId] != NULL) {
+		if (edgeMatrix[srcMatrixId][dstMatrixId] != NULL
+			|| edgeMatrix[dstMatrixId][srcMatrixId] != NULL) {
 			return;
 		}
 
-		edge* newEdge = new edge(src, dst, status); // 새로운 edge object 생성
-		eList.insertEdge(newEdge); // edge List에 edge 삽입
-		// src, dst에 해당하는 행렬에 새로운 edge의 주소 삽입
+		edge* newEdge = new edge(src, dst, weight);
+		eList.insertEdge(newEdge);
 		edgeMatrix[srcMatrixId][dstMatrixId] =
 			edgeMatrix[dstMatrixId][srcMatrixId] = newEdge;
-
 	}
 
-	// edge 삭제
 	void eraseEdge(int srcVertexId, int dstVertexId) {
 		vertex* src = vList.findVertex(srcVertexId);
 		vertex* dst = vList.findVertex(dstVertexId);
@@ -205,10 +185,8 @@ public:
 		int srcMatrixId = src->matrixId;
 		int dstMatrixId = dst->matrixId;
 
-		// src, dst에 해당하는 행렬에서 edge 정보가 없는 경우
 		if (edgeMatrix[srcMatrixId][dstMatrixId] == NULL ||
 			edgeMatrix[dstMatrixId][srcMatrixId] == NULL) {
-
 			return;
 		}
 
@@ -217,56 +195,101 @@ public:
 			edgeMatrix[dstMatrixId][srcMatrixId] = NULL;
 	}
 
-	void friend_of_friend(int vertexId) {
-		vertex* cur = vList.findVertex(vertexId);
-
-		int matrixId = cur->matrixId;
+	void findIncident1(int srcId) {
+		bool arr[500] = { false };
+		bool noFriend = true;
 
 		for (int i = 0; i < edgeMatrix.size(); i++) {
-			if (i != matrixId) {
-				if (edgeMatrix[i][matrixId] != NULL) {
-					if (edgeMatrix[i][matrixId]->status == 1)
-					{
-						for (int j = 0; j < edgeMatrix.size(); i++) {
-							if (j != i) {
-								if (edgeMatrix[j][i] != NULL) {
-									if (edgeMatrix[j][i]->status == 1) {
-										cout << edgeMatrix[j][i]->src->vertexId << endl;
-									}
-								}
-							}
-						}
+			if (edgeMatrix[srcId][i] != NULL && edgeMatrix[srcId][i]->weight == 2) { // 인접행렬 찾기
+				for (int j = 0; j < edgeMatrix.size(); j++) {
+					if (edgeMatrix[i][j] != NULL &&
+						edgeMatrix[srcId][j] == NULL && srcId != j &&
+						edgeMatrix[i][j]->weight == 2) {
+						arr[j] = true;
 					}
 				}
 			}
 		}
+
+		for (int i = 0; i < edgeMatrix.size(); i++) {
+			if (edgeMatrix[srcId][i] != NULL) {
+				if (arr[i])
+					arr[i] = false;
+			}
+		}
+		for (int i = 0; i < 500; i++) {
+			if (arr[i]) {
+				cout << i + 1 << ' ';
+				noFriend = false;
+			}
+		}
+		
+		if (noFriend) cout << 0;
+		cout << endl;
+	}
+
+	void findIncident2(int srcId) {
+		bool arr[500] = { false };
+		bool noFriend = true;
+
+		for (int i = 0; i < edgeMatrix.size(); i++) {
+			if (edgeMatrix[srcId][i] != NULL && edgeMatrix[srcId][i]->weight == 2) { // 인접행렬 찾기
+				for (int j = 0; j < edgeMatrix.size(); j++) {
+					if (edgeMatrix[i][j] != NULL &&
+						edgeMatrix[srcId][j] == NULL && srcId != j &&
+						edgeMatrix[i][j]->weight == 1) {
+						arr[j] = true;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < edgeMatrix.size(); i++) {
+			if (edgeMatrix[srcId][i] != NULL) {
+				if (arr[i])
+					arr[i] = false;
+			}
+		}
+		for (int i = 0; i < 500; i++) {
+			if (arr[i]) {
+				cout << i + 1 << ' ';
+				noFriend = false;
+			}
+		}
+
+		if (noFriend) cout << 0;
+		cout << endl;
 	}
 };
 
 int main() {
 	int n, m;
-	
+
 	cin >> n >> m;
 
 	graph g;
 
-	for (int i = 1; i <= n; i++) {
-		g.insertVertex(n);
+	for (int i = 0; i < n; i++) {
+		g.insertVertex(i);
 	}
 
-	for (int i = 1; i <= n; i++) {
-		for (int j = 1; j <= n; j++) {
-			int x;
-			cin >> x;
-
-			g.insertEdge(i, j, x);
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			int st;
+			cin >> st;
+			if (st != 0)
+				g.insertEdge(i, j, st);
 		}
 	}
 
-	for (int i = 0; i < m; i++) {
+	while (m--) {
 		int k, f;
 		cin >> k >> f;
 		if (f == 0) {
+			g.findIncident1(k - 1);
+		}
+		if (f == 1) {
+			g.findIncident2(k - 1);
 		}
 	}
 }
