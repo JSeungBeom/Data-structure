@@ -19,7 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IncidenceList_prob4.cpp" />
+    <ClCompile Include="AdjacencyList_prob1.cpp" />
+    <ClCompile Include="AdjacencyList_prob2.cpp" />
+    <ClCompile Include="AdjacencyList_prob3.cpp" />
+    <ClCompile Include="AdjacencyList_prob4.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
