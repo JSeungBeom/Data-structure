@@ -35,11 +35,15 @@ int main() {
         }
 
         DFS(1);
-
+        cnt = 0;
         for (int i = 0; i < 501; i++) {
             visit[i] = false;
         }
-
+        
+        for (int i = 0; i < 501; i++) {
+            while(!adj[i].empty())
+            adj[i].pop_back();
+        }
         cout << endl;
     }
 }
